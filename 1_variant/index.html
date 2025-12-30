@@ -64,6 +64,61 @@
                 </tr>
             </tbody>
         </table>
+
+        <br>
+
+        <form>
+            <label for="htmlformdropdown">Hozzáadás típusa:</label>
+            <select id="htmlformdropdown" >
+                <option value="simple">Szimpla</option>
+                <option value="double" selected>Dupla</option>
+            </select>
+            
+            <p class="error"></p>
+            <br>
+
+            <div>
+                <label for="elso">Szerző:</label>
+                <input type="text" id="elso" name="szerzo">
+                <p class="error"></p>
+            </div>
+
+            <br>
+
+            <div>
+                <label for="masodik">Első mű:</label>
+                <input type="text" id="masodik" name="elso_mu">
+                <p class="error"></p>
+            </div>
+
+            <br>
+
+            <div>
+                <label for="harmadik">Első mű létrejötte:</label>
+                <input type="text" id="harmadik" name="elso_mu_letrejotte">
+                <p class="error"></p>
+            </div>
+
+            <br>
+
+            <div>
+                <label for="negyedik">Második mű:</label>
+                <input type="text" id="negyedik" name="masodik_mu">
+                <p class="error"></p>
+            </div>
+
+            <br>
+
+            <div>
+                <label for="otodik">Második mű létrejötte:</label>
+                <input type="text" id="otodik" name="masodik_mu_letrejotte">
+                <p class="error"></p>
+            </div>
+            
+            <br>
+            
+            <button type="submit">Hozzáad</button>
+        </form>
     </div>
 
     <script src="index.js"></script>
