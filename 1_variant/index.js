@@ -17,7 +17,6 @@ const tableData = {
                     concepts: ['novella']
                 }
             ]
-            
         },
         {
             author: 'Kosztolányi Dezső',
@@ -45,7 +44,7 @@ const tableData = {
 };
 
 /**
- * 
+ * A szerző megváltoztatásakor frissíti a művek menüben elérhető opciókat
  * @param {Event} event
  * @returns {void}
  */
@@ -78,7 +77,7 @@ const formFields = [
 ]
 
 /**
- * 
+ * Létrehoz egy cellát a megadott paraméterek szerint
  * @param {string} type 
  * @param {string} content 
  * @param {number} [colspan] 
@@ -99,7 +98,7 @@ function createCell(type, content, colspan, rowspan) {
 }
 
 /**
- * 
+ * Meghatározza az összes mű közül a max. előforduló fogalmak számát
  * @returns {number}
  */
 function getMaxConcepts() {
@@ -117,7 +116,7 @@ function getMaxConcepts() {
 }
 
 /**
- * 
+ * Létrehozza a táblázat fejlécének sorát
  * @param {(string|{text: string, colspan: number})[]} rowData 
  * @returns {HTMLTableRowElement}
  */
@@ -138,26 +137,13 @@ function createHeadRow(rowData) {
 }
 
 /**
- * 
+ * Létrehozza a táblázat törzsét
+ * @param {HTMLTableSectionElement} tbody
  * @param {{head: (string|{text: string, colspan: number})[], body: (string|{text: string, colspan: number})[][]}} data
  * @returns {void}
  */
-function generateTable(data) {
-    const body = document.body;
-
-    const div = document.createElement('div');
-    body.appendChild(div);
-    div.classList.add('jssection');
-
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const tbody = document.createElement('tbody');
-    table.appendChild(thead);
-    table.appendChild(tbody);
-    div.appendChild(table);
-
-    const headRow = createHeadRow(data.head);
-    thead.appendChild(headRow);
+function createBody(tbody, data) {
+    tbody.innerHTML = '';
 
     for (const authorData of data.body) {
         let workIndex = 1;
@@ -196,7 +182,33 @@ function generateTable(data) {
 }
 
 /**
- * 
+ * Létrehozza a táblázatot
+ * @param {{head: (string|{text: string, colspan: number})[], body: (string|{text: string, colspan: number})[][]}} data
+ * @returns {void}
+ */
+function generateTable(data) {
+    const body = document.body;
+
+    const div = document.createElement('div');
+    body.appendChild(div);
+    div.classList.add('jssection');
+
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const tbody = document.createElement('tbody');
+    tbody.id = 'jstbody';
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    div.appendChild(table);
+
+    const headRow = createHeadRow(data.head);
+    thead.appendChild(headRow);
+
+    createBody(tbody, data);
+}
+
+/**
+ * Visszaad egy string-eket tartalmazó listát, mely a label szerinti dropdown-hoz tartozik
  * @param {string} label 
  * @returns {string[]}
  */
@@ -224,7 +236,7 @@ function getOptions(label) {
 }
 
 /**
- * 
+ * Létrehoz a form-hoz egy beviteli mezőt
  * @param {{label: string, type: string, id: string, name: string, handler?: (event: Event) => void}} field 
  * @returns {HTMLDivElement}
  */
@@ -269,12 +281,17 @@ function createFormField(field) {
         input.id = field.id;
         input.name = field.name;
         div.appendChild(input);
+
+        const error = document.createElement('p');
+        error.classList.add('error');
+        div.appendChild(error);
     }
 
     return div;
 }
 
 /**
+ * Létrehozza a form-ot
  * @returns {void}
  */
 function generateForm() {
@@ -290,15 +307,17 @@ function generateForm() {
 }
 
 /**
+ * Létrehozza a JS részleget
  * @returns {void}
  */
 function generateJSSection() {
     generateTable(tableData);
     generateForm();
+    document.querySelector('.jssection form').addEventListener('submit', JSFormHandler);
 }
 
 /**
- * 
+ * A HTML/JS táblázatok közötti léptetést kezeli
  * @param {Event|undefined} event 
  */
 function handleRadioChange(event) {
@@ -312,7 +331,7 @@ function handleRadioChange(event) {
 }
 
 /**
- * 
+ * A HTML form-on belüli dropdown-t kezeli
  * @param {Event|undefined} event 
  */
 function handleHTMLFormDropdownChange(event) {
@@ -321,8 +340,13 @@ function handleHTMLFormDropdownChange(event) {
     const negyedikDivElement = document.querySelector('.htmlsection #negyedik').parentElement;
     const otodikDivElement = document.querySelector('.htmlsection #otodik').parentElement;
 
-    negyedikDivElement.style.display = value === 'double' ? 'block' : 'none';
-    otodikDivElement.style.display = value === 'double' ? 'block' : 'none';
+    if (value === 'double') {
+        negyedikDivElement.classList.remove('hide');
+        otodikDivElement.classList.remove('hide');
+    } else {
+        negyedikDivElement.classList.add('hide');
+        otodikDivElement.classList.add('hide');
+    }
 }
 
 /**
@@ -336,6 +360,169 @@ tableSelectorElement.addEventListener('change', handleRadioChange);
  */
 const formDropdownElement = document.querySelector('#htmlformdropdown');
 formDropdownElement.addEventListener('change', handleHTMLFormDropdownChange);
+
+/**
+ * Ellenőrzi, hogy a mező érvényesen van-e kitöltve
+ * @param {HTMLElement} inputElement
+ * @returns {boolean} 
+ */
+function validateField(inputElement) {
+    if (inputElement.value.trim() === '') {
+        const errorElement = inputElement.parentElement.querySelector('.error');
+        errorElement.innerText = 'Érvénytelen tartalom!';
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Törli a hibaértesítéseket
+ * @returns {void}
+ */
+function clearErrors() {
+    const errorElements = document.querySelectorAll('.error');
+
+    for (const errorElement of errorElements) {
+        errorElement.innerText = '';
+    }
+}
+
+document.querySelector('.htmlsection form').addEventListener('submit',
+    function (event) {
+        event.preventDefault();
+        clearErrors();
+
+        /**
+         * @type {string}
+         */
+        const selectedType = document.querySelector('#htmlformdropdown').value;
+        
+        /**
+         * @type {string[]}
+         */
+        let fields = ['elso', 'masodik', 'harmadik'];
+        
+        if (selectedType === 'double') {
+            fields = ['elso', 'masodik', 'harmadik', 'negyedik', 'otodik'];
+        }
+
+        let isValid = true;
+        for (const fieldId of fields) {
+            const inputElement = document.querySelector(`.htmlsection #${fieldId}`);
+            if (!validateField(inputElement)) {
+                isValid = false;
+            }
+        }
+
+        if (isValid) {
+            clearErrors();
+
+            const tbody = document.querySelector('#htmltbody');
+            const tr = document.createElement('tr');
+
+            if (selectedType === 'simple') {
+                for (const field of fields) {
+                    const inputElement = document.querySelector(`.htmlsection #${field}`);
+                    const inputValue = inputElement.value;
+
+                    const cell = createCell('td', inputValue);
+
+                    if (selectedType === 'double' && (field === 'elso')) {
+                        cell.rowSpan = 2;
+                    }
+
+                    tr.appendChild(cell);
+                }
+
+                tbody.appendChild(tr);
+            } else {
+                const tr2 = document.createElement('tr');
+
+                for (const field of fields) {
+                    const inputElement = document.querySelector(`.htmlsection #${field}`);
+                    const inputValue = inputElement.value;
+
+                    const cell = createCell('td', inputValue);
+
+                    if (field === 'elso') {
+                        cell.rowSpan = 2;
+                        tr.appendChild(cell);
+                    } else if (field === 'negyedik' || field === 'otodik') {
+                        tr2.appendChild(cell);
+                    } else {
+                        tr.appendChild(cell);
+                    }
+                }
+
+                tbody.appendChild(tr);
+                tbody.appendChild(tr2);
+            }
+
+            for (const fieldId of fields) {
+                document.querySelector(`.htmlsection #${fieldId}`).value = '';
+            }
+        }
+    }
+);
+
+/**
+ * 
+ * @param {Event} event 
+ * @returns {void}
+ */
+function JSFormHandler(event) {
+    event.preventDefault();
+    clearErrors();
+
+    const authorSelectElement = document.querySelector('.jssection #elso');
+    const selectedAuthor = authorSelectElement.value;
+    const workSelectElement = document.querySelector('.jssection #masodik');
+    const selectedWork = workSelectElement.value;
+
+    /**
+     * @type {string[]}
+     */
+    const inputFields = ['harmadik', 'negyedik'];
+    /**
+     * @type {string[]}
+     */
+    const concepts = [];
+    let validCount = 0;
+
+    for (const fieldId of inputFields) {
+        const inputElement = document.querySelector(`.jssection #${fieldId}`);
+        
+        if (validateField(inputElement)) {
+            concepts.push(inputElement.value);
+            validCount++;
+        }
+    }
+
+    if (validCount < 1) {
+        return;
+    }
+    
+    clearErrors();
+
+    for (const authorData of tableData.body) {
+        if (authorData.author === selectedAuthor) {
+            for (const work of authorData.works) {
+                if (work.title === selectedWork) {
+                    work.concepts = concepts;
+                }
+            }
+        }
+    }
+
+    const tbody = document.querySelector('.jssection tbody');
+
+    createBody(tbody, tableData);
+
+    for (const fieldId of inputFields) {
+        document.querySelector(`.jssection #${fieldId}`).value = '';
+    }
+}
 
 generateJSSection();
 handleRadioChange();
